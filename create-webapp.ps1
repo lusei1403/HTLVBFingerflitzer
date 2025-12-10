@@ -19,11 +19,24 @@ az webapp create `
 
 $SubscriptionId = (az account show | ConvertFrom-Json).id
 
-az ad sp create-for-rbac `
+$servicePrincipalSecret = az ad sp create-for-rbac `
   --name "gh-action-to-deploy-fingerflitzer-webapp-seil" `
   --role contributor `
   --scopes /subscriptions/$SubscriptionId/resourceGroups/rg-fingerflitzer/providers/Microsoft.Web/sites/wa-fingerflitzer-$UserName `
-  --json-auth
+  --json-auth | Out-String
+
+gh auth login
+
+gh secret set AZURE_CREDENTIALS `
+--repo lusei1403/HTLVBFingerflitzer `
+--body $servicePrincipalSecret
+
+az webapp deployment slot create `
+--name wa-fingerflitzer-$UserName `
+--resource-group rg-fingerflitzer `
+--slot staging
+
+
 
 
 # # Allow access from web app to database
@@ -55,3 +68,5 @@ $WebApp = az webapp show `
 Write-Host "### Web app: https://$($WebApp.defaultHostName)"
 
 # az group delete --name rg-fingerflitzer --no-wait
+$ServicePrincipal = az ad sp list --display-name "gh-action-to-deploy-fingerflitzer-webapp-seil" | ConvertFrom-Json
+az ad sp delete --id $ServicePrincipal.id
