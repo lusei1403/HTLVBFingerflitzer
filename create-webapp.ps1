@@ -17,6 +17,15 @@ az webapp create `
   --plan asp-fingerflitzer `
   --resource-group rg-fingerflitzer | Out-Null
 
+$SubscriptionId = (az account show | ConvertFrom-Json).id
+
+az ad sp create-for-rbac `
+  --name "gh-action-to-deploy-fingerflitzer-webapp-seil" `
+  --role contributor `
+  --scopes /subscriptions/$SubscriptionId/resourceGroups/rg-fingerflitzer/providers/Microsoft.Web/sites/wa-fingerflitzer-$UserName `
+  --json-auth
+
+
 # # Allow access from web app to database
 # # see https://learn.microsoft.com/en-us/azure/app-service/tutorial-connect-msi-azure-database
 # az extension add --name serviceconnector-passwordless --upgrade
