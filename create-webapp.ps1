@@ -36,7 +36,11 @@ az webapp deployment slot create `
 --resource-group rg-fingerflitzer `
 --slot staging
 
-
+az webapp config appsettings set `
+ --settings "DailyChallenge__Type=static-text" "DailyChallenge__StaticText=Hi from Azure Web App!" `
+ --slot staging `
+ --name wa-fingerflitzer-$UserName `
+ --resource-group rg-fingerflitzer
 
 
 # # Allow access from web app to database
