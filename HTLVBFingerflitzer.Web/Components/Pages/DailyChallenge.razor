@@ -1,13 +1,33 @@
 ﻿@page "/daily-challenge"
 @using System.Web
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Mvc.ViewFeatures
+@using Microsoft.Identity.Web
+@using System.Security.Claims
 @rendermode InteractiveServer
 @inject IJSRuntime JSRuntime
 @inject IDailyChallengeTextGenerator DailyChallengeTextGenerator
+@inject AuthenticationStateProvider AuthStateProvider
 @implements IAsyncDisposable
+@attribute [Authorize]
 
 <PageTitle>Daily challenge</PageTitle>
 <h3>Daily challenge</h3>
+
+@if(authState != null)
+{
+    <p>Eingeloggt als @authState.User.GetDisplayName()</p>
+    <p>
+        Claims: 
+        <ul>
+            @foreach (Claim claim in @authState.User.Claims)
+            {
+                <li>@claim.ToString()</li>
+            }
+        </ul>    
+    </p>
+}
 
 <div class="d-flex gap-2" style="font-family: monospace">
     @foreach(TypingStateEntry entry in typingState)
@@ -92,6 +112,13 @@
         // return result;
     }
 
+    AuthenticationState? authState;
+
+    protected override async Task OnInitializedAsync()
+    {
+        authState = await AuthStateProvider.GetAuthenticationStateAsync();
+
+    }
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)

@@ -1,4 +1,6 @@
 $UserName = ((az ad signed-in-user show | ConvertFrom-Json).userPrincipalName -replace '@.*$','' -replace '\W','').ToLower()
+$GithubRepositoryName = "lusei1403/HTLVBFingerflitzer"
+
 
 az group create --name rg-fingerflitzer --location swedencentral | Out-Null
 
@@ -27,9 +29,8 @@ $servicePrincipalSecret = az ad sp create-for-rbac `
 
 gh auth login
 
-gh secret set AZURE_CREDENTIALS `
---repo lusei1403/HTLVBFingerflitzer `
---body $servicePrincipalSecret
+$servicePrincipalSecret | gh secret set AZURE_CREDENTIALS `
+--repo $GithubRepositoryName
 
 az webapp deployment slot create `
 --name wa-fingerflitzer-$UserName `
@@ -42,6 +43,8 @@ az webapp config appsettings set `
  --name wa-fingerflitzer-$UserName `
  --resource-group rg-fingerflitzer
 
+gh workflow run publish-fingerflitzer-web-app.yml `
+ --repo $GithubRepositoryName
 
 # # Allow access from web app to database
 # # see https://learn.microsoft.com/en-us/azure/app-service/tutorial-connect-msi-azure-database
@@ -70,6 +73,12 @@ $WebApp = az webapp show `
   --name wa-fingerflitzer-$UserName `
   --resource-group rg-fingerflitzer | ConvertFrom-Json
 Write-Host "### Web app: https://$($WebApp.defaultHostName)"
+
+$WebAppStagingSlot = az webapp deployment slot list `
+  --name wa-fingerflitzer-$UserName `
+  --resource-group rg-fingerflitzer `
+  --query "[?name=='staging']" | ConvertFrom-Json
+Write-Host "### Web app: https://$($WebAppStagingSlot.defaultHostName)"
 
 # az group delete --name rg-fingerflitzer --no-wait
 $ServicePrincipal = az ad sp list --display-name "gh-action-to-deploy-fingerflitzer-webapp-seil" | ConvertFrom-Json
