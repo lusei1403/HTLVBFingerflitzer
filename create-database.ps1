@@ -1,15 +1,17 @@
 $env:PYTHONPATH = "C:\\Program Files\\Microsoft SDKs\\Azure\\CLI2"
 
+$Location = (az policy assignment list --query "[?name == 'sys.regionrestriction'].parameters.listOfAllowedLocations.value" | ConvertFrom-Json)[0]
+
 $UserName = ((az ad signed-in-user show | ConvertFrom-Json).userPrincipalName -replace '@.*$','' -replace '\W','').ToLower()
 
-az group create --name rg-fingerflitzer --location norwayeast | Out-Null
-# az postgres flexible-server list-skus --location norwayeast
+az group create --name rg-fingerflitzer --location $Location | Out-Null
+# az postgres flexible-server list-skus --location $Location
 az postgres flexible-server create `
   --name db-fingerflitzer-$UserName `
   --microsoft-entra-auth Enabled `
   --create-default-database Disabled `
   --database-name fingerflitzer `
-  --location norwayeast `
+  --location $Location `
   --password-auth Disabled `
   --public-access 0.0.0.0 `
   --sku-name Standard_B1ms `

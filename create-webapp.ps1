@@ -1,5 +1,7 @@
 az login
 gh auth login
+$Location = (az policy assignment list --query "[?name == 'sys.regionrestriction'].parameters.listOfAllowedLocations.value" | ConvertFrom-Json)[0]
+
 
 $UserName = ((az ad signed-in-user show | ConvertFrom-Json).userPrincipalName -replace '@.*$','' -replace '\W','').ToLower()
 $GitHubRepositoryName = "lusei1403/HTLVBFingerflitzer-HTLVBFingerflitzer"
